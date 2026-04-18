@@ -1,0 +1,29 @@
+2026-02-20 00:38:54,121:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: resnet50                      
+               batch_size: 16                            
+                crop_size: 224                           
+                  dataset: DISFA                         
+             dataset_path: data/DISFA                    
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 2                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 8                             
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_16_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:38:54,122:INFO: writting logs to file results\Test\bs_16_seed_0_lr_1e-05\train.log
+2026-02-20 00:38:54,233:INFO: Fold: [2 | 3  val_data_num: 43605 ]
+2026-02-20 00:38:54,691:INFO: [CFG] arc=resnet50 K=4 metric=dots bs=16 lr0=1e-05 wd=0.0005
+2026-02-20 00:38:54,691:INFO: Epoch: [1 | 20 LR: 1e-05 ]

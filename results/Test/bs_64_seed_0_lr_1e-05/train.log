@@ -1,0 +1,163 @@
+2026-02-20 00:15:02,767:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: swin_transformer_base         
+               batch_size: 64                            
+                crop_size: 224                           
+                  dataset: BP4D                          
+             dataset_path: data/BP4D                     
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 1                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 12                            
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_64_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:15:02,768:INFO: writting logs to file results\Test\bs_64_seed_0_lr_1e-05\train.log
+2026-02-20 00:15:39,171:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: swin_transformer_base         
+               batch_size: 64                            
+                crop_size: 224                           
+                  dataset: BP4D                          
+             dataset_path: data/BP4D                     
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 1                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 12                            
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_64_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:15:39,171:INFO: writting logs to file results\Test\bs_64_seed_0_lr_1e-05\train.log
+2026-02-20 00:16:04,302:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: swin_transformer_base         
+               batch_size: 64                            
+                crop_size: 224                           
+                  dataset: DISFA                         
+             dataset_path: data/DISFA                    
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 1                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 8                             
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_64_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:16:04,303:INFO: writting logs to file results\Test\bs_64_seed_0_lr_1e-05\train.log
+2026-02-20 00:16:47,245:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: swin_transformer_base         
+               batch_size: 64                            
+                crop_size: 224                           
+                  dataset: DISFA                         
+             dataset_path: data/DISFA                    
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 1                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 8                             
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_64_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:16:47,246:INFO: writting logs to file results\Test\bs_64_seed_0_lr_1e-05\train.log
+2026-02-20 00:16:47,376:INFO: Fold: [1 | 3  val_data_num: 43605 ]
+2026-02-20 00:18:17,269:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: swin_transformer_base         
+               batch_size: 64                            
+                crop_size: 224                           
+                  dataset: DISFA                         
+             dataset_path: data/DISFA                    
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 1                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 8                             
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_64_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:18:17,269:INFO: writting logs to file results\Test\bs_64_seed_0_lr_1e-05\train.log
+2026-02-20 00:18:17,366:INFO: Fold: [1 | 3  val_data_num: 43605 ]
+2026-02-20 00:18:18,394:INFO: [CFG] arc=swin_transformer_base K=4 metric=dots bs=64 lr0=1e-05 wd=0.0005
+2026-02-20 00:18:18,394:INFO: Epoch: [1 | 20 LR: 1e-05 ]
+2026-02-20 00:19:55,677:INFO: ----------------- Options ---------------
+                   N_fold: 3                             
+                      arc: swin_transformer_base         
+               batch_size: 64                            
+                crop_size: 224                           
+                  dataset: DISFA                         
+             dataset_path: data/DISFA                    
+                   epochs: 20                            
+                 evaluate: False                         
+                 exp_name: Test                          
+                     fold: 2                             
+                  gpu_ids: 0                             
+                      lam: 0.05                          
+            learning_rate: 1e-05                         
+                   metric: dots                          
+             neighbor_num: 4                             
+              num_classes: 8                             
+              num_workers: 4                             
+            optimizer_eps: 1e-08                         
+                   outdir: results\Test\bs_64_seed_0_lr_1e-05
+                   resume:                               
+            resume_phase2:                               
+                     seed: 0                             
+             weight_decay: 0.0005                        
+----------------- End -------------------
+2026-02-20 00:19:55,677:INFO: writting logs to file results\Test\bs_64_seed_0_lr_1e-05\train.log
+2026-02-20 00:19:55,882:INFO: Fold: [2 | 3  val_data_num: 43605 ]
+2026-02-20 00:19:56,681:INFO: [CFG] arc=swin_transformer_base K=4 metric=dots bs=64 lr0=1e-05 wd=0.0005
+2026-02-20 00:19:56,681:INFO: Epoch: [1 | 20 LR: 1e-05 ]

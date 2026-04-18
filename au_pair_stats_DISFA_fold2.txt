@@ -1,0 +1,46 @@
+=== TẤT CẢ CẶP AU (theory + data) ===
+AU1-AU2: count_au1=5037, count_au2=4765, count_both=3206, p_both|au1=0.636, p_both|au2=0.673, theory=cooccur, data=data_cooccur
+AU1-AU4: count_au1=5037, count_au2=13280, count_both=1665, p_both|au1=0.331, p_both|au2=0.125, theory=none, data=data_cooccur
+AU1-AU6: count_au1=5037, count_au2=6769, count_both=418, p_both|au1=0.083, p_both|au2=0.062, theory=none, data=ambiguous
+AU1-AU9: count_au1=5037, count_au2=4186, count_both=347, p_both|au1=0.069, p_both|au2=0.083, theory=exclusion, data=ambiguous
+AU1-AU12: count_au1=5037, count_au2=10664, count_both=617, p_both|au1=0.122, p_both|au2=0.058, theory=none, data=ambiguous
+AU1-AU25: count_au1=5037, count_au2=23041, count_both=1680, p_both|au1=0.334, p_both|au2=0.073, theory=none, data=data_cooccur
+AU1-AU26: count_au1=5037, count_au2=7410, count_both=979, p_both|au1=0.194, p_both|au2=0.132, theory=none, data=ambiguous
+AU2-AU4: count_au1=4765, count_au2=13280, count_both=1740, p_both|au1=0.365, p_both|au2=0.131, theory=cooccur, data=data_cooccur
+AU2-AU6: count_au1=4765, count_au2=6769, count_both=217, p_both|au1=0.046, p_both|au2=0.032, theory=exclusion, data=data_exclusion
+AU2-AU9: count_au1=4765, count_au2=4186, count_both=132, p_both|au1=0.028, p_both|au2=0.032, theory=exclusion, data=data_exclusion
+AU2-AU12: count_au1=4765, count_au2=10664, count_both=336, p_both|au1=0.071, p_both|au2=0.032, theory=none, data=ambiguous
+AU2-AU25: count_au1=4765, count_au2=23041, count_both=799, p_both|au1=0.168, p_both|au2=0.035, theory=none, data=ambiguous
+AU2-AU26: count_au1=4765, count_au2=7410, count_both=547, p_both|au1=0.115, p_both|au2=0.074, theory=none, data=ambiguous
+AU4-AU6: count_au1=13280, count_au2=6769, count_both=1402, p_both|au1=0.106, p_both|au2=0.207, theory=none, data=ambiguous
+AU4-AU9: count_au1=13280, count_au2=4186, count_both=3041, p_both|au1=0.229, p_both|au2=0.726, theory=cooccur, data=data_cooccur
+AU4-AU12: count_au1=13280, count_au2=10664, count_both=380, p_both|au1=0.029, p_both|au2=0.036, theory=exclusion, data=data_exclusion
+AU4-AU25: count_au1=13280, count_au2=23041, count_both=4396, p_both|au1=0.331, p_both|au2=0.191, theory=cooccur, data=data_cooccur
+AU4-AU26: count_au1=13280, count_au2=7410, count_both=1732, p_both|au1=0.130, p_both|au2=0.234, theory=none, data=ambiguous
+AU6-AU9: count_au1=6769, count_au2=4186, count_both=1417, p_both|au1=0.209, p_both|au2=0.339, theory=none, data=data_cooccur
+AU6-AU12: count_au1=6769, count_au2=10664, count_both=4332, p_both|au1=0.640, p_both|au2=0.406, theory=cooccur, data=data_cooccur
+AU6-AU25: count_au1=6769, count_au2=23041, count_both=5112, p_both|au1=0.755, p_both|au2=0.222, theory=cooccur, data=data_cooccur
+AU6-AU26: count_au1=6769, count_au2=7410, count_both=919, p_both|au1=0.136, p_both|au2=0.124, theory=cooccur, data=ambiguous
+AU9-AU12: count_au1=4186, count_au2=10664, count_both=179, p_both|au1=0.043, p_both|au2=0.017, theory=exclusion, data=data_exclusion
+AU9-AU25: count_au1=4186, count_au2=23041, count_both=2361, p_both|au1=0.564, p_both|au2=0.102, theory=cooccur, data=data_cooccur
+AU9-AU26: count_au1=4186, count_au2=7410, count_both=917, p_both|au1=0.219, p_both|au2=0.124, theory=none, data=ambiguous
+AU12-AU25: count_au1=10664, count_au2=23041, count_both=7808, p_both|au1=0.732, p_both|au2=0.339, theory=cooccur, data=data_cooccur
+AU12-AU26: count_au1=10664, count_au2=7410, count_both=1182, p_both|au1=0.111, p_both|au2=0.160, theory=none, data=ambiguous
+AU25-AU26: count_au1=23041, count_au2=7410, count_both=5344, p_both|au1=0.232, p_both|au2=0.721, theory=cooccur, data=data_cooccur
+
+=== DATA_ONLY_PAIRS (data có, luật không có) ===
+AU1-AU4: count_both=1665, count_au1=5037, count_au2=13280
+AU1-AU6: count_both=418, count_au1=5037, count_au2=6769
+AU1-AU12: count_both=617, count_au1=5037, count_au2=10664
+AU1-AU25: count_both=1680, count_au1=5037, count_au2=23041
+AU1-AU26: count_both=979, count_au1=5037, count_au2=7410
+AU2-AU12: count_both=336, count_au1=4765, count_au2=10664
+AU2-AU25: count_both=799, count_au1=4765, count_au2=23041
+AU2-AU26: count_both=547, count_au1=4765, count_au2=7410
+AU4-AU6: count_both=1402, count_au1=13280, count_au2=6769
+AU4-AU26: count_both=1732, count_au1=13280, count_au2=7410
+AU6-AU9: count_both=1417, count_au1=6769, count_au2=4186
+AU9-AU26: count_both=917, count_au1=4186, count_au2=7410
+AU12-AU26: count_both=1182, count_au1=10664, count_au2=7410
+
+=== RULE_ONLY_PAIRS (luật có, data không có) ===

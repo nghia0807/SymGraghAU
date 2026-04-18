@@ -1,0 +1,5 @@
+python train_Sym_Landmark_Stage_1.py --dataset DISFA --fold 2 --arc resnet50 --batch-size 16 --epochs 20 --learning-rate 0.0001 --dataset-path data\DISFA --exp-name SymLandmark_Stage1_Fold2
+
+python train_Sym_Stage_2.py --dataset DISFA --fold 2 --arc resnet50 --batch-size 16 --epochs 20 --learning-rate 0.0001 --dataset-path data\DISFA --exp-name SymLandmark_Stage2_Fold2 --resume results\SymLandmark_Stage1_Fold2\bs_16_seed_0_lr_0.0001\best_model_stage2_ready_fold2.pth
+
+python train_Sym_Stage_3.py --dataset DISFA --fold 2 --arc resnet50 --batch-size 16 --epochs 20 --learning-rate 0.0001 --dataset-path data\DISFA --exp-name SymLandmark_Stage3_Fold2 --resume results\SymLandmark_Stage1_Fold2\bs_16_seed_0_lr_0.0001\best_model_stage2_ready_fold2.pth --resume-phase2 results\SymLandmark_Stage2_Fold2\bs_16_seed_0_lr_0.0001\phase2_epoch20_fold2.pth
