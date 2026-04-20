@@ -23,7 +23,8 @@ from train_Sym_Stage_2 import (
     LogicGCN,
     LogicOperatorEmbeddings,
     LogicRuleBasePySAT,
-    build_logic_graph_for_sample,
+    AU_NAME_TO_IDX,
+    EXPR_NAME_TO_IDX,
 )
 
 
@@ -106,6 +107,132 @@ def get_dataloader(conf):
 #    L_l: MSE giữa global node của G_cnf(I_t) và G_p(I_t)
 # ============================================================
 
+_CNF_TOPOLOGY_CACHE = {}
+
+
+def _cnf_to_hashable_key(cnf_clauses_str):
+    return tuple(tuple(clause) for clause in cnf_clauses_str)
+
+
+def _parse_literal(lit_str):
+    lit_str = lit_str.strip()
+    neg = lit_str.startswith("¬")
+    if neg:
+        name = lit_str[1:]
+    else:
+        name = lit_str
+    return name, neg
+
+
+def _get_or_build_graph_topology(cnf_clauses_str, num_aus, num_expr, device):
+    """Build and cache static graph topology for a CNF clause pattern."""
+    key = (num_aus, num_expr, _cnf_to_hashable_key(cnf_clauses_str), str(device))
+    cached = _CNF_TOPOLOGY_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    num_clause = len(cnf_clauses_str)
+    idx_and = num_aus + num_expr + num_clause
+    idx_global = idx_and + 1
+    num_nodes = idx_global + 1
+
+    A = torch.zeros(num_nodes, num_nodes, device=device)
+
+    # OR nodes connect to AND and literals.
+    for c_idx, clause in enumerate(cnf_clauses_str):
+        or_idx = num_aus + num_expr + c_idx
+        A[or_idx, idx_and] = 1.0
+        A[idx_and, or_idx] = 1.0
+
+        for lit in clause:
+            name, _ = _parse_literal(lit)
+            if name in AU_NAME_TO_IDX:
+                lit_idx = AU_NAME_TO_IDX[name]
+                if lit_idx >= num_aus:
+                    continue
+            elif name in EXPR_NAME_TO_IDX:
+                expr_j = EXPR_NAME_TO_IDX[name]
+                if expr_j >= num_expr:
+                    continue
+                lit_idx = num_aus + expr_j
+            else:
+                continue
+
+            A[or_idx, lit_idx] = 1.0
+            A[lit_idx, or_idx] = 1.0
+
+    # Global node connects to all nodes.
+    A[idx_global, :] = 1.0
+    A[:, idx_global] = 1.0
+    A[idx_global, idx_global] = 0.0
+
+    # Static one-hot type code for all nodes.
+    # [global, and, or, leaf]
+    type_code = torch.zeros(num_nodes, 4, device=device)
+    type_code[: num_aus + num_expr, 3] = 1.0
+    if num_clause > 0:
+        type_code[num_aus + num_expr: idx_and, 2] = 1.0
+    type_code[idx_and, 1] = 1.0
+    type_code[idx_global, 0] = 1.0
+
+    cached = (A, type_code, idx_global, num_clause)
+    _CNF_TOPOLOGY_CACHE[key] = cached
+    return cached
+
+
+def _build_graph_features_pair(
+    type_code,
+    idx_global,
+    num_clause,
+    centers_au,
+    centers_expr,
+    p_a,
+    p_expr,
+    global_vec,
+    op_emb_module,
+    emb_dim,
+):
+    """Build feature matrices for G_cnf and G_p with shared topology."""
+    device = centers_au.device
+    num_aus = centers_au.size(0)
+    num_expr = centers_expr.size(0)
+    num_nodes = type_code.size(0)
+
+    x_cnf = torch.zeros(num_nodes, emb_dim + 4, device=device)
+    x_pred = torch.zeros_like(x_cnf)
+
+    x_cnf[:, :4] = type_code
+    x_pred[:, :4] = type_code
+
+    # Leaf AU nodes.
+    x_cnf[:num_aus, 4:] = centers_au
+    x_pred[:num_aus, 4:] = centers_au * p_a.unsqueeze(1)
+
+    # Leaf expression nodes.
+    expr_start = num_aus
+    expr_end = num_aus + num_expr
+    x_cnf[expr_start:expr_end, 4:] = centers_expr
+    x_pred[expr_start:expr_end, 4:] = centers_expr * p_expr.unsqueeze(1)
+
+    # OR nodes.
+    or_start = expr_end
+    or_end = or_start + num_clause
+    if num_clause > 0:
+        or_emb = op_emb_module.or_emb.unsqueeze(0)
+        x_cnf[or_start:or_end, 4:] = or_emb.expand(num_clause, -1)
+        x_pred[or_start:or_end, 4:] = or_emb.expand(num_clause, -1)
+
+    # AND node.
+    idx_and = or_end
+    x_cnf[idx_and, 4:] = op_emb_module.and_emb
+    x_pred[idx_and, 4:] = op_emb_module.and_emb
+
+    # Global node.
+    x_cnf[idx_global, 4:] = global_vec
+    x_pred[idx_global, 4:] = global_vec
+
+    return x_cnf, x_pred
+
 def compute_logic_loss_for_batch(
     V_a,
     outputs_AU,
@@ -132,62 +259,70 @@ def compute_logic_loss_for_batch(
     p_a_batch = torch.sigmoid(outputs_AU)              # (B, N_a)
     p_expr_batch = torch.sigmoid(outputs_Emo)          # (B, N_e)
 
-    z_cnf_list, z_pred_list = [], []
+    p_expr_batch_cpu = p_expr_batch.detach().to("cpu")
+    targets_cpu = targets.detach().to("cpu")
+
+    a_blocks = []
+    x_cnf_blocks = []
+    x_pred_blocks = []
+    global_indices = []
+    offset = 0
 
     for b in range(B):
-        y_a_b = targets[b]                             # (N_a,)
+        y_a_b = targets_cpu[b]                         # (N_a,), CPU to avoid GPU sync in PySAT rule build
         global_vec_b = global_vec_batch[b]             # (D,)
         p_a_b = p_a_batch[b]                           # (N_a,)
         p_expr_b = p_expr_batch[b]                     # (N_e,)
+        p_expr_b_cpu = p_expr_batch_cpu[b]
 
         # ----- Sinh CNF paradigm cho sample (Phase 2 style) -----
         # dùng GT AU + p_expr_b (expression prob) → CNF_t(I_t)
         _, _, cnf_str_b = rule_base_pysat.sample_assignments_with_pysat(
-            y_a_b, p_expr_b
+            y_a_b, p_expr_b_cpu
         )
 
-        # ----- Graph G_cnf(I_t): knowledge-only -----
-        X_cnf, A_cnf, idx_g_cnf = build_logic_graph_for_sample(
+        # Build topology once and reuse for both G_cnf and G_p.
+        A_b, type_code_b, idx_g_b, num_clause_b = _get_or_build_graph_topology(
             cnf_str_b,
+            device=device,
+            num_aus=centers_au.size(0),
+            num_expr=centers_expr.size(0),
+        )
+
+        X_cnf_b, X_pred_b = _build_graph_features_pair(
+            type_code_b,
+            idx_g_b,
+            num_clause_b,
             centers_au,
             centers_expr,
+            p_a_b,
+            p_expr_b,
             global_vec_b,
             op_emb_module,
             emb_dim,
-            assignment=None,
-            device=device,
         )
 
-        # ----- Graph G_p(I_t): prediction-conditioned -----
-        assignment_pred = {}
-        num_aus = centers_au.size(0)
-        num_expr = centers_expr.size(0)
+        a_blocks.append(A_b)
+        x_cnf_blocks.append(X_cnf_b)
+        x_pred_blocks.append(X_pred_b)
+        global_indices.append(offset + idx_g_b)
+        offset += A_b.size(0)
 
-        for i in range(num_aus):
-            assignment_pred[('au', i)] = p_a_b[i]
-        for j in range(num_expr):
-            assignment_pred[('expr', j)] = p_expr_b[j]
+    if len(a_blocks) == 1:
+        A_big = a_blocks[0]
+    else:
+        A_big = torch.block_diag(*a_blocks)
 
-        X_p, A_p, idx_g_p = build_logic_graph_for_sample(
-            cnf_str_b,
-            centers_au,
-            centers_expr,
-            global_vec_b,
-            op_emb_module,
-            emb_dim,
-            assignment=assignment_pred,
-            device=device,
-        )
+    X_cnf_big = torch.cat(x_cnf_blocks, dim=0)
+    X_pred_big = torch.cat(x_pred_blocks, dim=0)
 
-        # ---- Knowledge embedder (GCN) – dùng chung tham số đã học Phase 2 ----
-        Q_cnf = gcn(X_cnf, A_cnf)
-        Q_p = gcn(X_p, A_p)
+    # Two batched GCN passes instead of 2*B per-sample passes.
+    Q_cnf_big = gcn(X_cnf_big, A_big)
+    Q_pred_big = gcn(X_pred_big, A_big)
 
-        z_cnf_list.append(Q_cnf[idx_g_cnf])
-        z_pred_list.append(Q_p[idx_g_p])
-
-    z_cnf = torch.stack(z_cnf_list, dim=0)      # (B, D)
-    z_pred = torch.stack(z_pred_list, dim=0)    # (B, D)
+    global_idx = torch.tensor(global_indices, device=device, dtype=torch.long)
+    z_cnf = Q_cnf_big.index_select(0, global_idx)
+    z_pred = Q_pred_big.index_select(0, global_idx)
 
     L_l = F.mse_loss(z_cnf, z_pred)
     return mu_l * L_l, L_l.detach().item()
