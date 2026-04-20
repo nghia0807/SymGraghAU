@@ -31,8 +31,8 @@ def extract_landmarks(image_path, fa, img_size=224):
 
 def main():
     parser = argparse.ArgumentParser(description='Extract facial landmarks for DISFA')
-    parser.add_argument('--data-root', type=str, default='data/DISFA/img_crop',
-                        help='Thư mục chứa ảnh đã crop (default: data/DISFA/img_crop)')
+    parser.add_argument('--data-root', type=str, default='data/DISFA/img',
+                        help='Thư mục chứa ảnh đã crop (default: data/DISFA/img)')
     parser.add_argument('--output-dir', type=str, default='data/DISFA/landmarks',
                         help='Thư mục output .npy (default: data/DISFA/landmarks)')
     parser.add_argument('--img-size', type=int, default=224,
