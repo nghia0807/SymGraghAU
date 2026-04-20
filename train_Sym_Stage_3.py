@@ -33,6 +33,15 @@ from train_Sym_Stage_2 import (
 
 def get_dataloader(conf):
     print('==> Preparing data (Phase 3)...')
+    loader_kwargs = {
+        "batch_size": conf.batch_size,
+        "num_workers": conf.num_workers,
+        "pin_memory": torch.cuda.is_available(),
+    }
+    if conf.num_workers > 0:
+        loader_kwargs["persistent_workers"] = True
+        loader_kwargs["prefetch_factor"] = 2
+
     if conf.dataset == 'BP4D':
         trainset = BP4D(
             conf.dataset_path,
@@ -44,9 +53,8 @@ def get_dataloader(conf):
         )
         train_loader = DataLoader(
             trainset,
-            batch_size=conf.batch_size,
             shuffle=True,
-            num_workers=conf.num_workers,
+            **loader_kwargs,
         )
         valset = BP4D(
             conf.dataset_path,
@@ -57,9 +65,8 @@ def get_dataloader(conf):
         )
         val_loader = DataLoader(
             valset,
-            batch_size=conf.batch_size,
             shuffle=False,
-            num_workers=conf.num_workers,
+            **loader_kwargs,
         )
 
     elif conf.dataset == 'DISFA':
@@ -73,9 +80,8 @@ def get_dataloader(conf):
         )
         train_loader = DataLoader(
             trainset,
-            batch_size=conf.batch_size,
             shuffle=True,
-            num_workers=conf.num_workers,
+            **loader_kwargs,
         )
         valset = DISFA(
             conf.dataset_path,
@@ -86,9 +92,8 @@ def get_dataloader(conf):
         )
         val_loader = DataLoader(
             valset,
-            batch_size=conf.batch_size,
             shuffle=False,
-            num_workers=conf.num_workers,
+            **loader_kwargs,
         )
     else:
         raise ValueError(f"Unknown dataset: {conf.dataset}")
@@ -214,6 +219,7 @@ def train_phase3(
 
     train_loader_len = len(train_loader)
     pbar = tqdm(train_loader, desc=f"[Phase3 Train] Epoch {epoch}")
+    use_cuda = torch.cuda.is_available()
 
     for batch_idx, (inputs, targets) in enumerate(pbar):
         adjust_learning_rate(
@@ -226,11 +232,11 @@ def train_phase3(
         )
 
         targets = targets.float()
-        if torch.cuda.is_available():
-            inputs = inputs.to(device)
-            targets = targets.to(device)
+        if use_cuda:
+            inputs = inputs.to(device, non_blocking=True)
+            targets = targets.to(device, non_blocking=True)
 
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
 
         # ----- Forward Stage 1 (đang fine-tune) -----
         V_a, V_e, outputs_AU, outputs_Emo = net(inputs)
@@ -296,12 +302,13 @@ def val_phase3(
     statistics_list = None
 
     pbar = tqdm(val_loader, desc="[Phase3 Val]")
+    use_cuda = torch.cuda.is_available()
 
     for batch_idx, (inputs, targets) in enumerate(pbar):
         targets = targets.float()
-        if torch.cuda.is_available():
-            inputs = inputs.to(device)
-            targets = targets.to(device)
+        if use_cuda:
+            inputs = inputs.to(device, non_blocking=True)
+            targets = targets.to(device, non_blocking=True)
 
         V_a, V_e, outputs_AU, outputs_Emo = net(inputs)
 
@@ -447,6 +454,11 @@ def main(conf):
     # Hệ số cho logic loss L_l (mu trong Eq.(12))
     mu_l = getattr(conf, "lambda_logic", 0.1)
 
+    # Validation và checkpoint interval:
+    # default giữ nguyên hành vi cũ (val mỗi epoch, save mỗi 2 epoch).
+    val_interval = max(1, int(os.getenv("PHASE3_VAL_INTERVAL", "1")))
+    save_interval = max(1, int(os.getenv("PHASE3_SAVE_INTERVAL", "2")))
+
     start_time = datetime.now()
     print("Start time:", start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -487,43 +499,57 @@ def main(conf):
             mu_l=mu_l,
         )
 
-        (
-            val_L_total,
-            val_L_wa,
-            val_L_l,
-            val_mean_f1,
-            val_f1_list,
-            val_mean_acc,
-            val_acc_list,
-        ) = val_phase3(
-            conf,
-            net,
-            val_loader,
-            criterion_wa,
-            gcn,
-            op_emb_module,
-            centers_au,
-            centers_expr,
-            emb_dim,
-            rule_base_pysat,
-            mu_l=mu_l,
-        )
-
-        infostr = {
-            "Phase3 Epoch: {}  train_L_total: {:.5f}  val_L_total: {:.5f}  "
-            "train_L_wa: {:.5f}  train_L_l: {:.5f}  val_L_wa: {:.5f}  val_L_l: {:.5f}  "
-            "val_mean_f1: {:.2f}  val_mean_acc: {:.2f}".format(
-                epoch + 1,
-                train_L_total,
+        do_val = ((epoch + 1) % val_interval == 0) or ((epoch + 1) == conf.epochs)
+        if do_val:
+            (
                 val_L_total,
-                train_L_wa,
-                train_L_l,
                 val_L_wa,
                 val_L_l,
-                100.0 * val_mean_f1,
-                100.0 * val_mean_acc,
+                val_mean_f1,
+                val_f1_list,
+                val_mean_acc,
+                val_acc_list,
+            ) = val_phase3(
+                conf,
+                net,
+                val_loader,
+                criterion_wa,
+                gcn,
+                op_emb_module,
+                centers_au,
+                centers_expr,
+                emb_dim,
+                rule_base_pysat,
+                mu_l=mu_l,
             )
-        }
+
+            infostr = {
+                "Phase3 Epoch: {}  train_L_total: {:.5f}  val_L_total: {:.5f}  "
+                "train_L_wa: {:.5f}  train_L_l: {:.5f}  val_L_wa: {:.5f}  val_L_l: {:.5f}  "
+                "val_mean_f1: {:.2f}  val_mean_acc: {:.2f}".format(
+                    epoch + 1,
+                    train_L_total,
+                    val_L_total,
+                    train_L_wa,
+                    train_L_l,
+                    val_L_wa,
+                    val_L_l,
+                    100.0 * val_mean_f1,
+                    100.0 * val_mean_acc,
+                )
+            }
+        else:
+            infostr = {
+                "Phase3 Epoch: {}  train_L_total: {:.5f}  train_L_wa: {:.5f}  "
+                "train_L_l: {:.5f}  val: skipped (interval={})".format(
+                    epoch + 1,
+                    train_L_total,
+                    train_L_wa,
+                    train_L_l,
+                    val_interval,
+                )
+            }
+
         print(infostr)
         logging.info(infostr)
 
@@ -534,7 +560,7 @@ def main(conf):
         # logging.info(dataset_info(val_acc_list))
 
         # ----- Save checkpoint -----
-        if (epoch + 1) % 2 == 0:
+        if (epoch + 1) % save_interval == 0:
             checkpoint = {
                 "epoch": epoch,
                 "state_dict": net.state_dict(),
